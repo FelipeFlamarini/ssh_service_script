@@ -38,6 +38,8 @@ if [ -d "$HOME" ]; then
     exit 1
 fi
 
+read -p "Do you need a Docker instance? [y/N] " NEEDS_DOCKER
+
 read -p "Enter start command: " START_COMMAND
 read -p "Enter stop command: " STOP_COMMAND
 
@@ -46,6 +48,14 @@ PASSWORD=$(generate_password)
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
 chown -R "$PROJECT_NAME":"$PROJECT_NAME" "$HOME"
+
+if [ "$NEEDS_DOCKER" == "y" ]; then
+    if [ -f /usr/bin/dockerd-rootless-setuptool.sh ]; then
+        su - "$PROJECT_NAME" -c "/usr/bin/dockerd-rootless-setuptool.sh install"
+    fi
+    su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.socket"
+    su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.service"
+fi
 
 SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SERVICE_DIR"
@@ -61,11 +71,11 @@ User=$PROJECT_NAME
 WorkingDirectory=$HOME
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 EOF
 
 loginctl enable-linger "$PROJECT_NAME"
-systemctl daemon-reload
+su - "$PROJECT_NAME" -c "systemctl --user daemon-reload"
 su - "$PROJECT_NAME" -c "systemctl --user enable $PROJECT_NAME.service"
 
 echo "Project $PROJECT_NAME created."
