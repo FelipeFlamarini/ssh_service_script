@@ -101,11 +101,8 @@ export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u $PROJECT_NAME)/bus
 EOF
 
 loginctl enable-linger "$PROJECT_NAME"
-su $PROJECT_NAME <<EOF
-export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u $PROJECT_NAME)/bus
-systemctl --user daemon-reload
-systemctl --user enable $PROJECT_NAME.service
-EOF
+systemctl -M "$PROJECT_NAME" daemon-reload
+systemctl -M "$PROJECT_NAME" enable $PROJECT_NAME.service
 
 echo "Project $PROJECT_NAME created." | tee -a "$LOGFILE"
 echo "Directory: $HOME" | tee -a "$LOGFILE"
