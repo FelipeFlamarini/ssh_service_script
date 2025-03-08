@@ -38,7 +38,22 @@ if [ -d "$HOME" ]; then
     exit 1
 fi
 
-read -p "Do you need a Docker instance? [y/N] " NEEDS_DOCKER
+while true; do
+    read -p "Do you need a Docker instance? [y/N] " NEEDS_DOCKER
+    case "$NEEDS_DOCKER" in
+    [yY] | [yY][sS] | "")
+        NEEDS_DOCKER="y"
+        break
+        ;;
+    [nN] | [nN][oO])
+        NEEDS_DOCKER="N"
+        break
+        ;;
+    *)
+        echo "Invalid input. Please enter 'y' or 'N'."
+        ;;
+    esac
+done
 
 read -p "Enter start command: " START_COMMAND
 read -p "Enter stop command: " STOP_COMMAND
@@ -55,6 +70,10 @@ if [ "$NEEDS_DOCKER" == "y" ]; then
     fi
     su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.socket"
     su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.service"
+
+    cat <<EOF >"$HOME/.bashrc"
+export DOCKER_HOST=unix:///run/user/\$(id -u)/docker.sock
+    EOF
 fi
 
 SERVICE_DIR="$HOME/.config/systemd/user"
@@ -63,7 +82,13 @@ SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
 cat <<EOF >"$SERVICE_FILE"
 [Unit]
 Description=$PROJECT_NAME service
+EOF
 
+if [ "$NEEDS_DOCKER" == "y" ]; then
+    echo "After=docker.service" >>"$SERVICE_FILE"
+fi
+
+cat <<EOF >"$SERVICE_FILE"
 [Service]
 ExecStart=$START_COMMAND
 ExecStop=$STOP_COMMAND
