@@ -103,8 +103,8 @@ EOF
 
 loginctl enable-linger "$PROJECT_NAME"
 
-echo "Project $PROJECT_NAME created." | tee -a "$LOGFILE"
-echo "Directory: $HOME" | tee -a "$LOGFILE"
-echo "User: $PROJECT_NAME" | tee -a "$LOGFILE"
-echo "Password: $PASSWORD" | tee -a "$LOGFILE"
-echo "Service: $PROJECT_NAME.service" | tee -a "$LOGFILE"
+echo "Project $PROJECT_NAME created."
+echo "Directory: $HOME"
+echo "User: $PROJECT_NAME"
+echo "Password: $PASSWORD"
+echo "Service: $PROJECT_NAME.service"
