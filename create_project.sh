@@ -20,9 +20,6 @@ generate_password() {
 ALL_PROJECTS_DIR="/etc/projects"
 mkdir -p "$ALL_PROJECTS_DIR"
 
-LOGFILE="/var/log/create_project.log"
-exec > >(tee -a "$LOGFILE") 2>&1
-
 read -p "Enter project name: " PROJECT_NAME
 validate_project_name "$PROJECT_NAME"
 
@@ -72,8 +69,8 @@ if [ "$NEEDS_DOCKER" == "y" ]; then
     su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.service"
 
     cat <<EOF >"$HOME/.bashrc"
-export DOCKER_HOST=unix:///run/user/\$(id -u)/docker.sock
-    EOF
+    export DOCKER_HOST=unix:///run/user/\$(id -u)/docker.sock
+EOF
 fi
 
 SERVICE_DIR="$HOME/.config/systemd/user"
@@ -99,12 +96,19 @@ WorkingDirectory=$HOME
 WantedBy=default.target
 EOF
 
-loginctl enable-linger "$PROJECT_NAME"
-su - "$PROJECT_NAME" -c "systemctl --user daemon-reload"
-su - "$PROJECT_NAME" -c "systemctl --user enable $PROJECT_NAME.service"
+cat <<EOF >"$HOME/.bashrc"
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u $PROJECT_NAME)/bus
+EOF
 
-echo "Project $PROJECT_NAME created."
-echo "Directory: $HOME"
-echo "User: $PROJECT_NAME"
-echo "Password: $PASSWORD"
-echo "Service: $PROJECT_NAME.service"
+loginctl enable-linger "$PROJECT_NAME"
+su $PROJECT_NAME <<EOF
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u $PROJECT_NAME)/bus
+systemctl --user daemon-reload
+systemctl --user enable $PROJECT_NAME.service
+EOF
+
+echo "Project $PROJECT_NAME created." | tee -a "$LOGFILE"
+echo "Directory: $HOME" | tee -a "$LOGFILE"
+echo "User: $PROJECT_NAME" | tee -a "$LOGFILE"
+echo "Password: $PASSWORD" | tee -a "$LOGFILE"
+echo "Service: $PROJECT_NAME.service" | tee -a "$LOGFILE"
