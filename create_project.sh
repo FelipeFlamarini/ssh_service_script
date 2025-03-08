@@ -98,11 +98,16 @@ EOF
 
 cat <<EOF >"$HOME/.bashrc"
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u $PROJECT_NAME)/bus
+export XDG_RUNTIME_DIR=/run/user/\$(id -u $PROJECT_NAME)
 EOF
 
 loginctl enable-linger "$PROJECT_NAME"
-systemctl -M "$PROJECT_NAME" daemon-reload
-systemctl -M "$PROJECT_NAME" enable $PROJECT_NAME.service
+
+su - "$PROJECT_NAME" <<EOF
+source ~/.bashrc
+systemctl --user daemon-reload
+systemctl --user enable $PROJECT_NAME.service
+EOF
 
 echo "Project $PROJECT_NAME created." | tee -a "$LOGFILE"
 echo "Directory: $HOME" | tee -a "$LOGFILE"
