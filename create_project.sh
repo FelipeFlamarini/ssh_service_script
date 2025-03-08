@@ -73,7 +73,7 @@ if [ "$NEEDS_DOCKER" == "y" ]; then
 EOF
 fi
 
-SERVICE_DIR="$HOME/.config/systemd/user"
+SERVICE_DIR="$HOME/.config/systemd/user/default.target.wants"
 mkdir -p "$SERVICE_DIR"
 SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
 cat <<EOF >"$SERVICE_FILE"
@@ -102,12 +102,6 @@ export XDG_RUNTIME_DIR=/run/user/\$(id -u $PROJECT_NAME)
 EOF
 
 loginctl enable-linger "$PROJECT_NAME"
-
-su - "$PROJECT_NAME" <<EOF
-source ~/.bashrc
-systemctl --user daemon-reload
-systemctl --user enable $PROJECT_NAME.service
-EOF
 
 echo "Project $PROJECT_NAME created." | tee -a "$LOGFILE"
 echo "Directory: $HOME" | tee -a "$LOGFILE"
