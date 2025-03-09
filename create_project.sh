@@ -103,6 +103,8 @@ EOF
 
 loginctl enable-linger "$PROJECT_NAME"
 
+chown -R "$PROJECT_NAME~ "$HOME"
+
 echo "Project $PROJECT_NAME created."
 echo "Directory: $HOME"
 echo "User: $PROJECT_NAME"
