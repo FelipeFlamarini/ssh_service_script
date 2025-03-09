@@ -73,7 +73,7 @@ if [ "$NEEDS_DOCKER" == "y" ]; then
 EOF
 fi
 
-SERVICE_DIR="$HOME/.config/systemd/user/default.target.wants"
+SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SERVICE_DIR"
 SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
 cat <<EOF >"$SERVICE_FILE"
