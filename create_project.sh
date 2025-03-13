@@ -56,27 +56,13 @@ read -p "Enter start command: " START_COMMAND
 read -p "Enter stop command: " STOP_COMMAND
 
 PASSWORD=$(generate_password)
+SERVICE_DIR="$HOME/.config/systemd/user"
+SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
 
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
-chown -R "$PROJECT_NAME":"$PROJECT_NAME" "$HOME"
-
-if [ "$NEEDS_DOCKER" == "y" ]; then
-    if [ -f /usr/bin/dockerd-rootless-setuptool.sh ]; then
-        su - "$PROJECT_NAME" -c "/usr/bin/dockerd-rootless-setuptool.sh install"
-    fi
-    su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.socket"
-    su - "$PROJECT_NAME" -c "systemctl enable --user --now docker.service"
-
-    cat <<EOF >"$HOME/.bashrc"
-    export DOCKER_HOST=unix:///run/user/\$(id -u)/docker.sock
-EOF
-fi
-
-SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SERVICE_DIR"
-SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
-cat <<EOF >"$SERVICE_FILE"
+cat <<EOF >>"$SERVICE_FILE"
 [Unit]
 Description=$PROJECT_NAME service
 EOF
@@ -85,7 +71,7 @@ if [ "$NEEDS_DOCKER" == "y" ]; then
     echo "After=docker.service" >>"$SERVICE_FILE"
 fi
 
-cat <<EOF >"$SERVICE_FILE"
+cat <<EOF >>"$SERVICE_FILE"
 [Service]
 ExecStart=$START_COMMAND
 ExecStop=$STOP_COMMAND
@@ -96,12 +82,8 @@ WorkingDirectory=$HOME
 WantedBy=default.target
 EOF
 
-cat <<EOF >"$HOME/.bashrc"
-export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u $PROJECT_NAME)/bus
-export XDG_RUNTIME_DIR=/run/user/\$(id -u $PROJECT_NAME)
-EOF
-
 loginctl enable-linger "$PROJECT_NAME"
+sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable $PROJECT_NAME.service"
 
 chown -R "$PROJECT_NAME" "$HOME"
 

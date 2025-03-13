@@ -15,9 +15,6 @@ validate_project_name() {
 
 ALL_PROJECTS_DIR="/etc/projects"
 
-LOGFILE="/var/log/delete_project.log"
-exec > >(tee -a "$LOGFILE") 2>&1
-
 read -p "Enter project name to delete: " PROJECT_NAME
 
 if [ -z "$PROJECT_NAME" ]; then
@@ -41,6 +38,7 @@ if systemctl --user is-active docker.service &>/dev/null; then
     su - "$PROJECT_NAME" -c "systemctl --user disable --now docker.service"
 fi
 
+loginctl disable-linger "$PROJECT_NAME"
 systemctl daemon-reload
 
 if id -u "$PROJECT_NAME" &>/dev/null; then
