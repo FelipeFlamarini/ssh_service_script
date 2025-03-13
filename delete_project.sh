@@ -28,7 +28,7 @@ HOME = "$ALL_PROJECTS_DIR/$PROJECT_NAME"
 SERVICE_FILE="$HOME/.config/systemd/user/$PROJECT_NAME.service"
 PROJECT_DIR="/etc/projects/$PROJECT_NAME"
 
-if systemctl is-enabled "$PROJECT_NAME.service" &>/dev/null; then
+if systemctl is-active "$PROJECT_NAME.service" &>/dev/null; then
     su - "$PROJECT_NAME" -c "systemctl disable --now $PROJECT_NAME.service"
     rm "$SERVICE_FILE"
 fi
