@@ -23,7 +23,7 @@ if [ -z "$PROJECT_NAME" ]; then
 fi
 
 validate_project_name "$PROJECT_NAME"
-HOME = "$ALL_PROJECTS_DIR/$PROJECT_NAME"
+HOME="$ALL_PROJECTS_DIR/$PROJECT_NAME"
 
 SERVICE_FILE="$HOME/.config/systemd/user/$PROJECT_NAME.service"
 PROJECT_DIR="/etc/projects/$PROJECT_NAME"
