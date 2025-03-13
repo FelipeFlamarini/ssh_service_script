@@ -9,12 +9,19 @@ This repository contains scripts to create and delete project environments with 
 These prerequisites suppose you are running a Ubuntu 24.04 installation. The scripts may work on other distributions, but the commands may differ.
 
 - have a user with sudo privileges;
-- have sshd installed and running (optional, needed for remote access);
+- have `systemd-container` installed;
+- have openssh-server installed and running (optional, needed for remote access);
 
 For the Docker optional support:
 
 - have Docker Engine and docker-ce-rootless-extras installed (must be installed following the instructions from the [official Docker documentation](https://docs.docker.com/engine/install/ubuntu/) using their `apt` repository);
 - have `newuidmap` and `newgidmap` installed (provided by the `uidmap` package);
+
+You can run the [install_prerequisites.sh](install_prerequisites.sh) script to install the prerequisites:
+
+```sh
+sudo ./install_prerequisites.sh
+```
 
 ### Running the script "[create_project.sh](create_project.sh)"
 
