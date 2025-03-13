@@ -66,12 +66,12 @@ mkdir -p "$SERVICE_DIR"
 mkdir -p "$PROJECT_DIR"
 
 if [ "$NEEDS_DOCKER" == "y" ]; then
-    if [ -d /usr/bin/docker-rootless.sh ]; then
-        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "/usr/bin/docker-rootless.sh install"
+    if [ -d /usr/bin/dockerd-rootless-setuptool.sh ]; then
+        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "dockerd-rootless-setuptool.sh install"
         sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable docker.socket"
         sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable --now docker.service"
     else
-        echo "Error: docker-rootles.sh couldn't be found, check if docker-ce-rootless-extras is installed."
+        echo "Error: dockerd-rootless-setuptool.sh couldn't be found, check if docker-ce-rootless-extras is installed."
     fi
 fi
 
