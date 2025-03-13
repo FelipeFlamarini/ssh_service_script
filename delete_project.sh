@@ -42,11 +42,11 @@ loginctl disable-linger "$PROJECT_NAME"
 systemctl daemon-reload
 
 if id -u "$PROJECT_NAME" &>/dev/null; then
-    userdel -r "$PROJECT_NAME"
+    userdel -r "$PROJECT_NAME" &>/dev/null
 fi
 
 if [ -d "$PROJECT_DIR" ]; then
     rm -rf "$PROJECT_DIR"
-fi
+fia
 
 echo "Project $PROJECT_NAME removed."
