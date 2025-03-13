@@ -58,10 +58,23 @@ read -p "Enter stop command: " STOP_COMMAND
 PASSWORD=$(generate_password)
 SERVICE_DIR="$HOME/.config/systemd/user"
 SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
+PROJECT_DIR="$HOME/project"
 
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
 mkdir -p "$SERVICE_DIR"
+mkdir -p "$PROJECT_DIR"
+
+if [ "$NEEDS_DOCKER" == "y" ]; then
+    if [ -d /usr/bin/docker-rootless.sh ]; then
+        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "/usr/bin/docker-rootless.sh install"
+        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable docker.socket"
+        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable --now docker.service"
+    else
+        echo "Error: docker-rootles.sh couldn't be found, check if docker-ce-rootless-extras is installed."
+    fi
+fi
+
 cat <<EOF >>"$SERVICE_FILE"
 [Unit]
 Description=$PROJECT_NAME service
@@ -69,6 +82,7 @@ EOF
 
 if [ "$NEEDS_DOCKER" == "y" ]; then
     echo "After=docker.service" >>"$SERVICE_FILE"
+    echo "Wants=docker.service" >>"$SERVICE_FILE"
 fi
 
 cat <<EOF >>"$SERVICE_FILE"
@@ -76,15 +90,15 @@ cat <<EOF >>"$SERVICE_FILE"
 ExecStart=$START_COMMAND
 ExecStop=$STOP_COMMAND
 User=$PROJECT_NAME
-WorkingDirectory=$HOME
+WorkingDirectory=$PROJECT_DIR
 
 [Install]
 WantedBy=default.target
 EOF
 
-loginctl enable-linger "$PROJECT_NAME"
-sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable $PROJECT_NAME.service"
+sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "systemctl --user enable --now $PROJECT_NAME.service"
 
+loginctl enable-linger "$PROJECT_NAME"
 chown -R "$PROJECT_NAME" "$HOME"
 
 echo "Project $PROJECT_NAME created."
