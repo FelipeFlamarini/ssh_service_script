@@ -9,19 +9,12 @@ This repository contains scripts to create and delete project environments with 
 These prerequisites suppose you are running a Ubuntu 24.04 installation. The scripts may work on other distributions, but the commands may differ.
 
 - have a user with sudo privileges;
-- have Docker and docker-rootless-extras installed (optional, needed for Docker support);
 - have sshd installed and running (optional, needed for remote access);
 
-You can meet the prerequisites by running the following commands:
+For the Docker optional support:
 
-```sh
-# Install Docker and sshd
-sudo apt update
-sudo apt install docker.io docker-rootless-extras openssh-server
-
-# Enable and start sshd
-sudo systemctl enable sshd
-```
+- have Docker Engine and docker-ce-rootless-extras installed (must be installed following the instructions from the [official Docker documentation](https://docs.docker.com/engine/install/ubuntu/) using their `apt` repository);
+- have `newuidmap` and `newgidmap` installed (provided by the `uidmap` package);
 
 ### Running the script "[create_project.sh](create_project.sh)"
 
