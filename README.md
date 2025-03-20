@@ -63,8 +63,8 @@ The projects' home directories are located in `/etc/projects`.
 
 Logs for the scripts are stored in:
 
-- `/var/log/create_project.log`
-- `/var/log/delete_project.log`
+- `/etc/projects/logs/create_project.log`
+- `/etc/projects/logs/delete_project.log`
 
 ## Usage as a project user
 
