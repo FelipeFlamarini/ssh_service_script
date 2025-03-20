@@ -80,7 +80,11 @@ A prompt will ask for the password. Enter the password provided and you will be 
 
 ### Managing your project
 
-The project user's home directory is located in `/etc/projects/{project}`, which will be the working directory when you log in. We recommend you create a new directory for your project files and work from there.
+The project user's home directory is located in `/etc/projects/{project}`, which will be the working directory when you log in. There will be an empty folder named `project` in your home directory, where you will store your project files. If your project's repository is hosted on GitHub, you can clone it into this folder with this command:
+
+```sh
+git clone {repository_url} project
+```
 
 ### Managing your user's service unit
 
