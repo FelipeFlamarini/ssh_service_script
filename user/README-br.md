@@ -21,7 +21,7 @@ git clone {repository_url} project
 Também é possível transferir os arquivos do seu projeto por `scp` para o diretório `project`.
 
 ```sh
-scp -r {source_directory} {username}@{hostname}:/etc/projects/{project_name}/project
+scp -r {source_directory} {username}@{hostname}:~/project
 ```
 
 ## Gerenciando a unidade de serviço do seu usuário
