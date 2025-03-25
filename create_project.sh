@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 set -e
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -19,7 +19,7 @@ validate_project_name() {
 }
 
 generate_password() {
-    tr -dc 'A-Za-z0-9!@#$%^&*()_+' </dev/urandom | head -c 12
+    tr -dc 'A-Za-z0-9!@#$' </dev/urandom | head -c 12
 }
 
 ALL_PROJECTS_DIR="/etc/projects"
@@ -63,27 +63,52 @@ while true; do
     esac
 done
 
-read -p "Enter start command (optional, can be changed later, blank to skip): " START_COMMAND
-echo "" >>$LOGFILE
-read -p "Enter stop command (optional, can be changed later, blank to skip): " STOP_COMMAND
-echo "" >>$LOGFILE
+read -p "Enter project name: " PROJECT_NAME
+validate_project_name "$PROJECT_NAME"
 
-PASSWORD=$(generate_password)
-SERVICE_DIR="$HOME/.config/systemd/user"
-SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
-PROJECT_DIR="$HOME/project"
-BASHRC_FILE="$HOME/.bashrc"
+HOME="$ALL_PROJECTS_DIR/$PROJECT_NAME"
+
+if id -u "$PROJECT_NAME" >/dev/null 2>&1; then
+    echo "Error: User $PROJECT_NAME already exists."
+    exit 1
+fi
+
+if [ -d "$HOME" ]; then
+    echo "Error: Directory $HOME already exists."
+    exit 1
+fi
+
+while true; do
+    read -p "Do you need a Docker instance? [y/N] " NEEDS_DOCKER
+    case "$NEEDS_DOCKER" in
+    [yY] | [yY][sS] | "")
+        NEEDS_DOCKER="y"
+        break
+        ;;
+    [nN] | [nN][oO])
+        NEEDS_DOCKER="N"
+        break
+        ;;
+    *)
+        echo "Invalid input. Please enter 'y' or 'N'."
+        ;;
+    esac
+done
 
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
 mkdir -p "$SERVICE_DIR"
 mkdir -p "$PROJECT_DIR"
+cp user/* $HOME
 chown -R "$PROJECT_NAME" "$SERVICE_DIR"
 
 echo "Creating project $PROJECT_NAME" | tee -a $LOGFILE
 if [ "$NEEDS_DOCKER" == "y" ]; then
     printf "${blu}Installing Docker for $PROJECT_NAME...${DEF}\n" | tee -a $LOGFILE
     if [ -f /usr/bin/dockerd-rootless-setuptool.sh ]; then
+        # for some reason, installing once doesn't work correctly
+        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "dockerd-rootless-setuptool.sh install" >>$LOGFILE
+        sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "dockerd-rootless-setuptool.sh uninstall" >>$LOGFILE
         sudo machinectl shell $PROJECT_NAME@ /bin/bash -c "dockerd-rootless-setuptool.sh install" >>$LOGFILE
         echo "export PATH=/usr/bin:\$PATH" >>"$BASHRC_FILE"
         echo "export DOCKER_HOST=unix:///run/user/$(id -u $PROJECT_NAME)/docker.sock" >>"$BASHRC_FILE"
@@ -108,7 +133,6 @@ cat <<EOF >>"$SERVICE_FILE"
 [Service]
 ExecStart=$START_COMMAND
 ExecStop=$STOP_COMMAND
-User=$PROJECT_NAME
 WorkingDirectory=$PROJECT_DIR
 
 [Install]
@@ -126,3 +150,4 @@ echo "Home directory: $HOME" | tee -a $LOGFILE
 echo "User: $PROJECT_NAME" | tee -a $LOGFILE
 echo "Password: $PASSWORD" | tee -a $LOGFILE
 echo "Service file: $SERVICE_FILE" | tee -a $LOGFILE
+
