@@ -63,7 +63,7 @@ while true; do
     esac
 done
 
-PASSWD=${generate_password()}
+PASSWORD=$(generate_password)
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
 mkdir -p "$SERVICE_DIR"
