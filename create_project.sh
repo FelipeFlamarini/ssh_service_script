@@ -63,38 +63,6 @@ while true; do
     esac
 done
 
-read -p "Enter project name: " PROJECT_NAME
-validate_project_name "$PROJECT_NAME"
-
-HOME="$ALL_PROJECTS_DIR/$PROJECT_NAME"
-
-if id -u "$PROJECT_NAME" >/dev/null 2>&1; then
-    echo "Error: User $PROJECT_NAME already exists."
-    exit 1
-fi
-
-if [ -d "$HOME" ]; then
-    echo "Error: Directory $HOME already exists."
-    exit 1
-fi
-
-while true; do
-    read -p "Do you need a Docker instance? [y/N] " NEEDS_DOCKER
-    case "$NEEDS_DOCKER" in
-    [yY] | [yY][sS] | "")
-        NEEDS_DOCKER="y"
-        break
-        ;;
-    [nN] | [nN][oO])
-        NEEDS_DOCKER="N"
-        break
-        ;;
-    *)
-        echo "Invalid input. Please enter 'y' or 'N'."
-        ;;
-    esac
-done
-
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
 mkdir -p "$SERVICE_DIR"
