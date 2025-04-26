@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 set -e
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -132,11 +132,20 @@ fi
 cat <<EOF >>"$SERVICE_FILE"
 [Service]
 ExecStart=$START_COMMAND
-ExecStop=$STOP_COMMAND
+Type=simple
+Restart=always
+RestartSec=5
+EOF
+
+if ["$STOP_COMMAND" != ""]; then
+    echo "ExecStop=$STOP_COMMAND" >>"$SERVICE_FILE"
+fi
+
+cat <<EOF >>"$SERVICE_FILE"
 WorkingDirectory=$PROJECT_DIR
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 EOF
 
 printf "${blu}Enabling $PROJECT_NAME service...${DEF}\n" | tee -a $LOGFILE
@@ -150,4 +159,6 @@ echo "Home directory: $HOME" | tee -a $LOGFILE
 echo "User: $PROJECT_NAME" | tee -a $LOGFILE
 echo "Password: $PASSWORD" | tee -a $LOGFILE
 echo "Service file: $SERVICE_FILE" | tee -a $LOGFILE
-
+if ["$START_COMMAND" == ""]; then
+    echo "You didn't provide a start command, please edit the service file to add it." | tee -a $LOGFILE
+fi
