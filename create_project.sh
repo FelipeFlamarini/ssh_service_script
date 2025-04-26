@@ -63,11 +63,22 @@ while true; do
     esac
 done
 
+read -p "Enter start command (optional, can be changed later, blank to skip): " START_COMMAND
+echo "" >>$LOGFILE
+read -p "Enter stop command (optional, can be changed later, blank to skip): " STOP_COMMAND
+echo "" >>$LOGFILE
+
 PASSWORD=$(generate_password)
+SERVICE_DIR="$HOME/.config/systemd/user"
+SERVICE_FILE="$SERVICE_DIR/$PROJECT_NAME.service"
+PROJECT_DIR="$HOME/project"
+BASHRC_FILE="$HOME/.bashrc"
+
 useradd -m -d "$HOME" -s /bin/bash "$PROJECT_NAME"
 echo "$PROJECT_NAME:$PASSWORD" | chpasswd
 mkdir -p "$SERVICE_DIR"
 mkdir -p "$PROJECT_DIR"
+
 cp user/* $HOME
 chown -R "$PROJECT_NAME" "$SERVICE_DIR"
 
@@ -91,11 +102,20 @@ printf "${blu}Creating service file for $PROJECT_NAME...${DEF}\n" | tee -a $LOGF
 cat <<EOF >>"$SERVICE_FILE"
 [Unit]
 Description=$PROJECT_NAME service
+
 EOF
 
 if [ "$NEEDS_DOCKER" == "y" ]; then
     echo "After=docker.service" >>"$SERVICE_FILE"
     echo "Wants=docker.service" >>"$SERVICE_FILE"
+fi
+
+if [[ "$START_COMMAND" == ./* ]]; then
+    START_COMMAND="$PROJECT_DIR/${START_COMMAND#./}"
+fi
+
+if [[ "$STOP_COMMAND" == ./* ]]; then
+    STOP_COMMAND="$PROJECT_DIR/${STOP_COMMAND#./}"
 fi
 
 cat <<EOF >>"$SERVICE_FILE"
@@ -106,7 +126,7 @@ Restart=always
 RestartSec=5
 EOF
 
-if ["$STOP_COMMAND" != ""]; then
+if [[ "$STOP_COMMAND" != "" ]]; then
     echo "ExecStop=$STOP_COMMAND" >>"$SERVICE_FILE"
 fi
 
@@ -114,7 +134,7 @@ cat <<EOF >>"$SERVICE_FILE"
 WorkingDirectory=$PROJECT_DIR
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 EOF
 
 printf "${blu}Enabling $PROJECT_NAME service...${DEF}\n" | tee -a $LOGFILE
@@ -128,6 +148,6 @@ echo "Home directory: $HOME" | tee -a $LOGFILE
 echo "User: $PROJECT_NAME" | tee -a $LOGFILE
 echo "Password: $PASSWORD" | tee -a $LOGFILE
 echo "Service file: $SERVICE_FILE" | tee -a $LOGFILE
-if ["$START_COMMAND" == ""]; then
+if [[ "$START_COMMAND" == "" ]]; then
     echo "You didn't provide a start command, please edit the service file to add it." | tee -a $LOGFILE
 fi
