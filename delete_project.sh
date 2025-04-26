@@ -48,9 +48,13 @@ HOME="$ALL_PROJECTS_DIR/$PROJECT_NAME"
 SERVICE_FILE="$HOME/.config/systemd/user/$PROJECT_NAME.service"
 PROJECT_DIR="/etc/projects/$PROJECT_NAME"
 
+echo "Disabling lingering"
+loginctl disable-linger $PROJECT_NAME
+sleep 2
+
 echo "Deleting user $PROJECT_NAME"
 if id -u "$PROJECT_NAME" &>/dev/null; then
-    userdel -r "$PROJECT_NAME" &>/dev/null
+    userdel -r "$PROJECT_NAME"
 fi
 
 echo "Deleting project directory $PROJECT_DIR"
