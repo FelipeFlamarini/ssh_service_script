@@ -54,7 +54,7 @@ while true; do
         break
         ;;
     [nN] | [nN][oO])
-        NEEDS_DOCKER="N"
+        NEEDS_DOCKER="n"
         break
         ;;
     *)
@@ -62,6 +62,41 @@ while true; do
         ;;
     esac
 done
+
+NEEDS_CREATE_STARTSH="n"
+if [[ "$NEEDS_DOCKER" == "n" ]]; then
+    while true; do
+        read -p "Do you need a start.sh file? [y/N] " NEEDS_CREATE_STARTSH
+        case "$NEEDS_CREATE_STARTSH" in
+        [yY] | [yY][sS] | "")
+            NEEDS_CREATE_STARTSH="y"
+            break
+            ;;
+        [nN] | [nN][oO])
+            NEEDS_CREATE_STARTSH="n"
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'y' or 'N'."
+            ;;
+        esac
+    done
+fi
+
+STARTSH_PORT=8080
+if [[ "$NEEDS_CREATE_STARTSH" == "y" ]]; then
+    while true; do
+        read -p "Enter start.sh port (default: $STARTSH_PORT): " STARTSH_PORT
+        if [[ -z "$STARTSH_PORT" ]]; then
+            STARTSH_PORT=8080
+            break
+        elif [[ "$STARTSH_PORT" =~ ^[0-9]+$ ]]; then
+            break
+        else
+            echo "Invalid port. Please enter a number."
+        fi
+    done
+fi
 
 read -p "Enter start command (optional, can be changed later, blank to skip): " START_COMMAND
 echo "" >>$LOGFILE
@@ -96,6 +131,32 @@ if [ "$NEEDS_DOCKER" == "y" ]; then
     else
         echo "Error: dockerd-rootless-setuptool.sh couldn't be found, check if docker-ce-rootless-extras is installed." | tee -a $LOGFILE
     fi
+fi
+
+if [[ "$NEEDS_CREATE_STARTSH" == "y" ]]; then
+    printf "${blu}Creating start.sh for $PROJECT_NAME...${DEF}\n" | tee -a $LOGFILE
+    cat <<EOF >"$PROJECT_DIR/start.sh"
+#!/bin/bash
+
+# Configurações padrão
+HOST=\${HOST:-0.0.0.0}
+PORT=\${PORT:-$STARTSH_PORT}
+
+# Ativar ambiente virtual (se estiver usando)
+python3 -m venv ../.venv
+source ../.venv/bin/activate
+
+# Instalar dependências
+pip install -r requirements.txt
+
+# Executar migrações do banco de dados
+flask db upgrade
+
+# Iniciar o Gunicorn
+echo "Iniciando servidor em $HOST:$PORT"
+HOST=$HOST PORT=$PORT gunicorn -c gunicorn_config.py "app:create_app()"
+EOF
+    chmod +x "$PROJECT_DIR/start.sh"
 fi
 
 printf "${blu}Creating service file for $PROJECT_NAME...${DEF}\n" | tee -a $LOGFILE
